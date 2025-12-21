@@ -1,4 +1,4 @@
-FROM node:lts-alpine AS build
+FROM node:24-alpine AS build
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN --mount=type=secret,id=env_file,target=/app/.env \
                                             npm run build
 
 
-FROM nginx:stable-alpine AS run
+FROM nginx:1.28-alpine AS run
 
 WORKDIR /app
 
