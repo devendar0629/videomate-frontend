@@ -1,10 +1,15 @@
 import { BrowserRouter, Route, Routes } from "react-router";
-import RootLayout from "@/app/RootLayout";
+import RootLayout from "@/app/root-layout";
 import App from "@/App";
 import LoginPage from "@/pages/login";
 import SignupPage from "@/pages/signup";
 import Protected from "@/components/security/protected";
-import Dashboard from "@/components/dashboard";
+import Home from "@/components/home";
+import Profile from "@/components/profile";
+import AuthenticatedLayout from "../layouts/authenticated-layout";
+import UploadVideo from "@/pages/upload-video";
+import AllVideoDetails from "@/pages/all-video-details";
+import VideoDetails from "@/pages/video-detail";
 
 export default function Router() {
     return (
@@ -12,7 +17,6 @@ export default function Router() {
             <Routes>
                 <Route element={<RootLayout />} path="">
                     <Route
-                        path=""
                         element={<Protected allowType="ONLY_UNAUTHENTICATED" />}
                     >
                         <Route path="/auth">
@@ -22,11 +26,22 @@ export default function Router() {
                     </Route>
 
                     <Route
-                        path=""
                         element={<Protected allowType="ONLY_AUTHENTICATED" />}
                     >
-                        <Route path="/app" element={<App />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route element={<AuthenticatedLayout />}>
+                            <Route index element={<Home />} />
+                            <Route path="/app" element={<App />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/upload" element={<UploadVideo />} />
+
+                            <Route path="/my-videos">
+                                <Route index element={<AllVideoDetails />} />
+                                <Route
+                                    path=":videoId"
+                                    element={<VideoDetails />}
+                                />
+                            </Route>
+                        </Route>
                     </Route>
 
                     <Route path="*" element={<div>404 Not Found</div>} />

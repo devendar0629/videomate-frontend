@@ -29,10 +29,10 @@ import { useAppDispatch } from "@/app/hooks";
 
 const loginFormSchema = z.object({
     email: z.email("Invalid email address"),
-    password: z
-        .string()
-        .min(8, "Password must be at least 8 characters long")
-        .max(64, "Password must be at most 64 characters long"),
+    password: z.any(),
+    // .string()
+    // .min(8, "Password must be at least 8 characters long")
+    // .max(64, "Password must be at most 64 characters long"),
 });
 type LoginFormData = z.infer<typeof loginFormSchema>;
 
@@ -82,11 +82,11 @@ export default function LoginForm({
 
                     for (const error of errors) {
                         setError(error.field, {
-                            message: error.message,
+                            message: error.error,
                         });
                     }
                 } else if (errorCode === "INVALID_CREDENTIALS") {
-                    setError("email", {
+                    setError("root", {
                         message: "Invalid email or password.",
                     });
                 } else {
@@ -186,6 +186,12 @@ export default function LoginForm({
                                     )}
                                     Login
                                 </Button>
+
+                                {errors.root && (
+                                    <FieldError>
+                                        {errors.root.message}
+                                    </FieldError>
+                                )}
 
                                 <FieldDescription className="text-center">
                                     Don&apos;t have an account?{" "}

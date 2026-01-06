@@ -49,6 +49,7 @@ export default function SignupForm({
         register,
         handleSubmit: handleFormSubmit,
         formState: { errors },
+        reset: resetForm,
         setError,
     } = useForm<SignupFormData>({
         resolver: zodResolver(signupFormSchema),
@@ -73,6 +74,7 @@ export default function SignupForm({
             }
 
             toast.success("Account created successfully! Please log in.");
+            resetForm();
         } catch (err) {
             if (err instanceof AxiosError && err.response?.data) {
                 const errorCode = err.response.data.errorCode;
@@ -82,7 +84,7 @@ export default function SignupForm({
 
                     for (const error of errors) {
                         setError(error.field, {
-                            message: error.message,
+                            message: error.error,
                         });
                     }
                 } else if (errorCode === "EMAIL_TAKEN") {

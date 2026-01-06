@@ -80,7 +80,7 @@
 }
 
 .dark {
-  --background: #0F4C75;
+  --background: #12222f;
   --foreground: oklch(94.912% 0.00011 271.152);
   --card: #162e3f;
   --card-foreground: #dde6ed;
@@ -133,4 +133,16 @@
     "wdth" 100,
     "GRAD" 0,
     "ROND" 0;
+}
+
+/* Video.js Quality Selector Styles */
+.vjs-quality-selector.vjs-menu-button {
+  cursor: pointer;
+}
+
+.vjs-quality-selector.vjs-menu-button .vjs-icon-placeholder::before {
+  font-family: "VideoJS" !important;
+  content: "\f114" !important;
+  font-size: 1.8em !important;
+  line-height: 1.67 !important;
 }

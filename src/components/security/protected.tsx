@@ -45,7 +45,7 @@ export default function Protected({ allowType }: ProtectedProps) {
             });
     }, [dispatch]);
 
-    // Intercept API requests to add Authorization header
+    // Intercept API requests to add accessToken to Authorization header
     useLayoutEffect(() => {
         const injectAccessTokenInterceptor = api.interceptors.request.use(
             (config) => {
@@ -76,6 +76,16 @@ export default function Protected({ allowType }: ProtectedProps) {
                         return Promise.reject(error);
                     }
 
+                    const isAuthRequiredForThisRequest =
+                        !/^\/auth\/(login|signup)$/.test(
+                            originalRequestConfig.url || ""
+                        ); // Shouldn't be a request to login or signup
+
+                    if (!isAuthRequiredForThisRequest) {
+                        // No need to renew token for auth endpoints like login or signup
+                        return Promise.reject(error);
+                    }
+
                     if (originalRequestConfig.url === "/auth/token") {
                         // Prevent infinite loop if token renewal fails
                         return Promise.reject(error);
@@ -93,8 +103,8 @@ export default function Protected({ allowType }: ProtectedProps) {
                         originalRequestConfig.headers.Authorization = `Bearer ${response.data.accessToken}`;
 
                         return api(originalRequestConfig);
-                    } catch (error) {
-                        throw error;
+                    } catch {
+                        throw error; // Throw the original error if token renewal fails
                     }
                 } else {
                     return Promise.reject(error);
@@ -118,7 +128,7 @@ export default function Protected({ allowType }: ProtectedProps) {
             navigate("/auth/login");
         }
         if (allowType === "ONLY_UNAUTHENTICATED" && isAuthenticated) {
-            navigate("/dashboard");
+            navigate("/");
         }
     }, [isAuthenticated]);
 
