@@ -45,19 +45,132 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                             handleClick() {
                                 const currentTime = this.player().currentTime();
                                 const isPaused = this.player().paused();
+                                const player = this.player();
+                                const videoEl = player
+                                    .el()
+                                    .querySelector("video");
+
+                                // Capture current frame before switching
+                                let frameOverlay: HTMLCanvasElement | null =
+                                    null;
+                                let loadingSpinner: HTMLDivElement | null =
+                                    null;
+
+                                if (videoEl && videoEl.readyState >= 2) {
+                                    try {
+                                        const canvas =
+                                            document.createElement("canvas");
+                                        canvas.width = videoEl.videoWidth;
+                                        canvas.height = videoEl.videoHeight;
+                                        const ctx = canvas.getContext("2d");
+
+                                        if (ctx) {
+                                            ctx.drawImage(
+                                                videoEl,
+                                                0,
+                                                0,
+                                                canvas.width,
+                                                canvas.height
+                                            );
+
+                                            // Create overlay element to show captured frame
+                                            frameOverlay = canvas;
+                                            frameOverlay.style.position =
+                                                "absolute";
+                                            frameOverlay.style.top = "0";
+                                            frameOverlay.style.left = "0";
+                                            frameOverlay.style.width = "100%";
+                                            frameOverlay.style.height = "100%";
+                                            frameOverlay.style.objectFit =
+                                                "contain";
+                                            frameOverlay.style.zIndex = "1";
+                                            frameOverlay.style.pointerEvents =
+                                                "none";
+
+                                            player
+                                                .el()
+                                                .appendChild(frameOverlay);
+
+                                            // Create loading spinner overlay
+                                            loadingSpinner =
+                                                document.createElement("div");
+                                            loadingSpinner.className =
+                                                "vjs-loading-spinner";
+                                            loadingSpinner.style.position =
+                                                "absolute";
+                                            loadingSpinner.style.top = "50%";
+                                            loadingSpinner.style.left = "50%";
+                                            loadingSpinner.style.transform =
+                                                "translate(-50%, -50%)";
+                                            loadingSpinner.style.zIndex = "2";
+                                            loadingSpinner.style.pointerEvents =
+                                                "none";
+
+                                            player
+                                                .el()
+                                                .appendChild(loadingSpinner);
+                                        }
+                                    } catch (error) {
+                                        console.warn(
+                                            "Failed to capture frame:",
+                                            error
+                                        );
+                                    }
+                                }
+
+                                // Remove poster temporarily to prevent it from showing during quality switch
+                                const posterUrl = player.poster();
+                                player.poster("");
 
                                 // Update source
-                                this.player().src({
+                                player.src({
                                     src: this.options_.src,
                                     type: "application/x-mpegURL",
                                 });
 
-                                // Restore playback position
-                                this.player().one("loadedmetadata", () => {
-                                    this.player().currentTime(currentTime);
-                                    if (!isPaused) {
-                                        this.player().play();
-                                    }
+                                // Restore playback position and state
+                                player.one("loadedmetadata", () => {
+                                    player.currentTime(currentTime);
+
+                                    // Wait for seeking to complete before playing
+                                    player.one("seeked", () => {
+                                        // Restore poster for future use
+                                        player.poster(posterUrl);
+
+                                        // Remove loading spinner
+                                        if (
+                                            loadingSpinner &&
+                                            loadingSpinner.parentNode
+                                        ) {
+                                            loadingSpinner.parentNode.removeChild(
+                                                loadingSpinner
+                                            );
+                                        }
+
+                                        // Remove frame overlay once new frame is ready
+                                        if (
+                                            frameOverlay &&
+                                            frameOverlay.parentNode
+                                        ) {
+                                            frameOverlay.parentNode.removeChild(
+                                                frameOverlay
+                                            );
+                                        }
+
+                                        if (!isPaused) {
+                                            const playPromise = player.play();
+                                            if (playPromise !== undefined) {
+                                                playPromise.catch(
+                                                    (error: any) => {
+                                                        console.error(
+                                                            "Error playing video:",
+                                                            error
+                                                        );
+                                                    }
+                                                );
+                                            }
+                                        }
+                                    });
                                 });
                             }
                         }

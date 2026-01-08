@@ -10,6 +10,7 @@ import AuthenticatedLayout from "../layouts/authenticated-layout";
 import UploadVideo from "@/pages/upload-video";
 import AllVideoDetails from "@/pages/all-video-details";
 import VideoDetails from "@/pages/video-detail";
+import WatchVideo from "@/pages/watch-video";
 
 export default function Router() {
     return (
@@ -34,6 +35,10 @@ export default function Router() {
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/upload" element={<UploadVideo />} />
 
+                            <Route
+                                path="/videos/watch/:videoId"
+                                element={<WatchVideo />}
+                            />
                             <Route path="/my-videos">
                                 <Route index element={<AllVideoDetails />} />
                                 <Route

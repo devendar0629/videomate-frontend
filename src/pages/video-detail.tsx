@@ -419,24 +419,38 @@ export default function VideoDetails() {
                             options={{
                                 sources: [
                                     {
-                                        src: `http://localhost:3000/videos/${video.uniqueFileName}/master.m3u8`,
+                                        src: `${
+                                            import.meta.env.VITE_BACKEND_HOST
+                                        }/videos/${
+                                            video.uniqueFileName
+                                        }/master.m3u8`,
                                         type: "application/x-mpegURL",
                                     },
                                 ],
                                 controls: true,
                                 fluid: true,
-                                preload: "none",
-                                poster: `http://localhost:3000/videos/${video.uniqueFileName}/thumbnail.jpg`,
+                                preload: "auto",
+                                poster: `${
+                                    import.meta.env.VITE_BACKEND_HOST
+                                }/videos/${video.uniqueFileName}/thumbnail.jpg`,
                             }}
                             qualities={[
                                 {
                                     label: "Auto",
-                                    src: `http://localhost:3000/videos/${video.uniqueFileName}/master.m3u8`,
+                                    src: `${
+                                        import.meta.env.VITE_BACKEND_HOST
+                                    }/videos/${
+                                        video.uniqueFileName
+                                    }/master.m3u8`,
                                 },
                                 ...video.availableResolutions.map(
                                     (resolution) => ({
                                         label: resolution,
-                                        src: `http://localhost:3000/videos/${video.uniqueFileName}/${resolution}/index.m3u8`,
+                                        src: `${
+                                            import.meta.env.VITE_BACKEND_HOST
+                                        }/videos/${
+                                            video.uniqueFileName
+                                        }/${resolution}/index.m3u8`,
                                     })
                                 ),
                             ]}
