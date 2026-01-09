@@ -1,4 +1,10 @@
-import { HomeIcon, LogOutIcon, SettingsIcon, VideoIcon } from "lucide-react";
+import {
+    HomeIcon,
+    LogOutIcon,
+    SettingsIcon,
+    UserIcon,
+    VideoIcon,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router";
 import api from "@/app/api";
@@ -80,6 +86,7 @@ const Sidebar = function () {
                     to="/my-videos"
                     label="My Videos"
                 />
+                <SidebarLink icon={<UserIcon />} to="/profile" label="Profile" />
                 <SidebarLink
                     icon={<SettingsIcon />}
                     to="/settings"

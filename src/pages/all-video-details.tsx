@@ -30,7 +30,6 @@ type VideoItem = {
     visibility: "private" | "public" | string;
     createdAt: string;
     updatedAt: string;
-    errorMessage: string | null;
 };
 
 const fetchMyVideos = async (): Promise<VideoItem[]> => {

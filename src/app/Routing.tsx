@@ -8,9 +8,11 @@ import Home from "@/components/home";
 import Profile from "@/components/profile";
 import AuthenticatedLayout from "../layouts/authenticated-layout";
 import UploadVideo from "@/pages/upload-video";
+import EditProfile from "@/pages/edit-profile";
 import AllVideoDetails from "@/pages/all-video-details";
 import VideoDetails from "@/pages/video-detail";
 import WatchVideo from "@/pages/watch-video";
+import EditVideo from "@/pages/edit-video";
 
 export default function Router() {
     return (
@@ -33,6 +35,10 @@ export default function Router() {
                             <Route index element={<Home />} />
                             <Route path="/app" element={<App />} />
                             <Route path="/profile" element={<Profile />} />
+                            <Route
+                                path="/profile/edit"
+                                element={<EditProfile />}
+                            />
                             <Route path="/upload" element={<UploadVideo />} />
 
                             <Route
@@ -44,6 +50,10 @@ export default function Router() {
                                 <Route
                                     path=":videoId"
                                     element={<VideoDetails />}
+                                />
+                                <Route
+                                    path=":videoId/edit"
+                                    element={<EditVideo />}
                                 />
                             </Route>
                         </Route>

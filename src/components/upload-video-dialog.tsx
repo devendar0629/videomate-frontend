@@ -2,9 +2,13 @@ import { useCallback, useRef, useState } from "react";
 
 type UploadVideoDialogProps = {
     onFileSelect?: (file: File | null) => void;
+    disabled?: boolean;
 };
 
-const UploadDialog: React.FC<UploadVideoDialogProps> = ({ onFileSelect }) => {
+const UploadDialog: React.FC<UploadVideoDialogProps> = ({
+    onFileSelect,
+    disabled = false,
+}) => {
     const [file, setFile] = useState<File | null>(null);
     const [drag, setDrag] = useState(false);
 
@@ -36,6 +40,7 @@ const UploadDialog: React.FC<UploadVideoDialogProps> = ({ onFileSelect }) => {
                 type="file"
                 accept="video/*"
                 id="upload-video"
+                disabled={disabled}
                 onChange={(e) => handleFile(e.target.files?.[0])}
             />
 
@@ -47,11 +52,19 @@ const UploadDialog: React.FC<UploadVideoDialogProps> = ({ onFileSelect }) => {
                 }`}
                 htmlFor="upload-video"
                 onDragOver={(e) => {
+                    if (disabled) return;
+
                     e.preventDefault();
                     setDrag(true);
                 }}
-                onDragLeave={() => setDrag(false)}
+                onDragLeave={() => {
+                    if (disabled) return;
+
+                    setDrag(false);
+                }}
                 onDrop={(e) => {
+                    if (disabled) return;
+
                     e.preventDefault();
 
                     setDrag(false);

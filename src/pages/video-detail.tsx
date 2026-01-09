@@ -17,6 +17,7 @@ import {
     GlobeIcon,
     Loader2Icon,
     LockIcon,
+    PencilIcon,
     RefreshCwIcon,
     Trash2Icon,
 } from "lucide-react";
@@ -43,7 +44,6 @@ type VideoItem = {
     availableResolutions: string[];
     status: "finished" | "processing" | "failed" | string;
     visibility: "private" | "public" | string;
-    errorMessage: string | null;
     createdAt: string;
     updatedAt: string;
 };
@@ -178,8 +178,7 @@ const FailedState: React.FC<{ video: VideoItem }> = ({ video }) => (
             </div>
             <CardTitle className="text-red-100">{video.title}</CardTitle>
             <CardDescription className="text-red-200/70">
-                {video.errorMessage ||
-                    "Video processing failed. Please try uploading again."}
+                {"Video processing failed. Please try uploading again."}
             </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
@@ -230,7 +229,7 @@ const VideoDeleteButton: React.FC<{ videoId: string }> = ({ videoId }) => {
                     disabled={isDeleting}
                     type="button"
                     variant="destructive"
-                    className="w-max mt-2 rounded-sm"
+                    className="w-max rounded-sm"
                 >
                     <Trash2Icon className="mb-0.75" />
                     Delete Video
@@ -469,7 +468,17 @@ export default function VideoDetails() {
                             <span>{video.originalFileName}</span>
                         </div>
 
-                        <VideoDeleteButton videoId={video._id} />
+                        <div className="flex gap-2 items-center mt-2">
+                            <Link
+                                className="bg-white text-black flex gap-1.25 items-center py-2 px-4 rounded-md hover:bg-white/90 transition-colors"
+                                to={`/my-videos/${video._id}/edit`}
+                            >
+                                <PencilIcon className="size-3.5 mb-0.5 -rotate-y-20" />
+                                Edit
+                            </Link>
+
+                            <VideoDeleteButton videoId={video._id} />
+                        </div>
                     </div>
                 </div>
             </div>
