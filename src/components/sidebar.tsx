@@ -86,11 +86,10 @@ const Sidebar = function () {
                     to="/my-videos"
                     label="My Videos"
                 />
-                <SidebarLink icon={<UserIcon />} to="/profile" label="Profile" />
                 <SidebarLink
-                    icon={<SettingsIcon />}
-                    to="/settings"
-                    label="Settings"
+                    icon={<UserIcon />}
+                    to="/profile"
+                    label="Profile"
                 />
             </div>
 
