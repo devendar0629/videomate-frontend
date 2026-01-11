@@ -13,12 +13,15 @@ import {
 import {
     ArrowLeftIcon,
     CalendarIcon,
+    EyeIcon,
     FilmIcon,
     GlobeIcon,
     Loader2Icon,
     LockIcon,
     PencilIcon,
     RefreshCwIcon,
+    ThumbsDownIcon,
+    ThumbsUpIcon,
     Trash2Icon,
 } from "lucide-react";
 import VideoPlayer from "@/components/video-player";
@@ -46,6 +49,11 @@ type VideoItem = {
     visibility: "private" | "public" | string;
     createdAt: string;
     updatedAt: string;
+    metrics: {
+        views: number;
+        likes: number;
+        dislikes: number;
+    };
 };
 
 const fetchVideoById = async (videoId: string): Promise<VideoItem> => {
@@ -209,7 +217,7 @@ const VideoDeleteButton: React.FC<{ videoId: string }> = ({ videoId }) => {
 
                 if (errorCode === "INVALID_VIDEO_ID") {
                     toast.error("Invalid video ID.");
-                } else if (errorCode === "VIDEO_NOT_FOUND") {
+                } else if (errorCode === "NOT_FOUND") {
                     toast.error("Video not found.");
                 } else {
                     toast.error(
@@ -283,7 +291,7 @@ export default function VideoDetails() {
     if (
         isError &&
         error instanceof AxiosError &&
-        error.response?.data?.errorCode === "VIDEO_NOT_FOUND"
+        error.response?.data?.errorCode === "NOT_FOUND"
     ) {
         return (
             <section className="max-w-2xl mx-auto py-12">
@@ -406,6 +414,7 @@ export default function VideoDetails() {
                         <h1 className="text-2xl font-bold leading-tight">
                             {video.title}
                         </h1>
+
                         {video.description && (
                             <p className="mt-2 text-muted-foreground leading-relaxed">
                                 {video.description}
@@ -413,7 +422,8 @@ export default function VideoDetails() {
                         )}
                     </div>
 
-                    <div className="max-w-4xl rounded-sm overflow-hidden">
+                    {/* Video player */}
+                    <div className="xl:max-w-4xl lg:max-w-3xl rounded-sm overflow-hidden">
                         <VideoPlayer
                             options={{
                                 sources: [
@@ -454,6 +464,55 @@ export default function VideoDetails() {
                                 ),
                             ]}
                         />
+                    </div>
+
+                    {/* Metrics */}
+                    <div className="flex items-center gap-6 p-4 w-fit rounded-lg bg-white/5 border border-white/10">
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center size-9 rounded-full bg-blue-500/10">
+                                <EyeIcon className="size-4 text-blue-400" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground">
+                                    Views
+                                </span>
+                                <span className="text-lg font-semibold">
+                                    {video.metrics.views.toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="h-10 w-px bg-white/10" />
+
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center size-9 rounded-full bg-green-500/10">
+                                <ThumbsUpIcon className="size-4 text-green-400" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground">
+                                    Likes
+                                </span>
+                                <span className="text-lg font-semibold">
+                                    {video.metrics.likes.toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="h-10 w-px bg-white/10" />
+
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center size-9 rounded-full bg-red-500/10">
+                                <ThumbsDownIcon className="size-4 text-red-400" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground">
+                                    Dislikes
+                                </span>
+                                <span className="text-lg font-semibold">
+                                    {video.metrics.dislikes.toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Metadata */}

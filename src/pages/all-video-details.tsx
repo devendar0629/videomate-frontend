@@ -1,4 +1,5 @@
 import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
 import api from "@/app/api";
 import {
     Card,
@@ -8,13 +9,16 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
     ArrowUpRight,
+    EyeIcon,
     FilmIcon,
     Loader2Icon,
     RefreshCwIcon,
     ShieldCheckIcon,
+    ThumbsDownIcon,
+    ThumbsUpIcon,
 } from "lucide-react";
 import { Link } from "react-router";
 
@@ -30,10 +34,23 @@ type VideoItem = {
     visibility: "private" | "public" | string;
     createdAt: string;
     updatedAt: string;
+    metrics: {
+        views: number;
+        likes: number;
+        dislikes: number;
+    };
 };
 
-const fetchMyVideos = async (): Promise<VideoItem[]> => {
-    const response = await api.get<VideoItem[]>("/api/videos/all");
+const VIDEOS_PER_PAGE = 12;
+
+const fetchMyVideos = async ({
+    pageParam = 1,
+}: {
+    pageParam?: number;
+}): Promise<VideoItem[]> => {
+    const response = await api.get<VideoItem[]>("/api/videos/all", {
+        params: { page: pageParam, limit: VIDEOS_PER_PAGE },
+    });
     return response.data;
 };
 
@@ -148,13 +165,58 @@ const EmptyState = () => {
 };
 
 const AllVideoDetails: React.FC = function () {
-    const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+    const {
+        data,
+        isLoading,
+        isError,
+        refetch,
+        isRefetching,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useInfiniteQuery({
         queryKey: ["my-videos"],
         queryFn: fetchMyVideos,
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, allPages) => {
+            // If the last page has fewer items than the limit, there are no more pages
+            if (lastPage.length < VIDEOS_PER_PAGE) {
+                return undefined;
+            }
+            return allPages.length + 1;
+        },
     });
 
-    const videos = data ?? [];
+    // Flatten all pages into a single array
+    const videos = data?.pages.flat() ?? [];
     const hasVideos = videos.length > 0;
+
+    // Intersection Observer for infinite scroll
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+
+    const handleObserver = useCallback(
+        (entries: IntersectionObserverEntry[]) => {
+            const [entry] = entries;
+            if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+                fetchNextPage();
+            }
+        },
+        [fetchNextPage, hasNextPage, isFetchingNextPage]
+    );
+
+    useEffect(() => {
+        const element = loadMoreRef.current;
+        if (!element) return;
+
+        const observer = new IntersectionObserver(handleObserver, {
+            root: null,
+            rootMargin: "100px",
+            threshold: 0,
+        });
+
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, [handleObserver]);
 
     return (
         <section className="space-y-6 text-white">
@@ -197,10 +259,12 @@ const AllVideoDetails: React.FC = function () {
                         <CardTitle className="text-red-100">
                             Something went wrong
                         </CardTitle>
+
                         <CardDescription className="text-red-200/80">
                             We could not load your videos. Please retry.
                         </CardDescription>
                     </CardHeader>
+
                     <CardContent>
                         <Button
                             onClick={() => refetch()}
@@ -226,10 +290,11 @@ const AllVideoDetails: React.FC = function () {
                             to={`/my-videos/${video._id}`}
                             className="group"
                         >
-                            <Card className="h-full border-white/10 bg-white/5 transition duration-200 hover:border-white/30 hover:shadow-lg">
-                                <CardContent className="pt-6 space-y-4">
+                            <Card className="h-full border-white/10 bg-white/5 transition duration-200 hover:border-white/30 hover:shadow-lg py-5">
+                                <CardContent className="space-y-4 px-5">
                                     <PreviewFrame video={video} />
 
+                                    {/* Title and Description */}
                                     <div className="space-y-1">
                                         <div className="flex items-start justify-between gap-2">
                                             <CardTitle className="text-base line-clamp-2">
@@ -246,6 +311,7 @@ const AllVideoDetails: React.FC = function () {
                                         )}
                                     </div>
 
+                                    {/* Visibility */}
                                     <div className="flex flex-wrap items-center gap-2">
                                         {video.status !== "finished" && (
                                             <StatusPill status={video.status} />
@@ -255,7 +321,36 @@ const AllVideoDetails: React.FC = function () {
                                         />
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                    {/* Metrics */}
+                                    <div className="flex w-fit items-center gap-4 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                                        <div className="flex items-center gap-1.5">
+                                            <EyeIcon className="size-3.5 text-blue-400" />
+                                            <span className="text-xs font-medium">
+                                                {video.metrics.views.toLocaleString()}
+                                            </span>
+                                        </div>
+
+                                        <div className="h-4 w-px bg-white/10" />
+
+                                        <div className="flex items-center gap-1.5">
+                                            <ThumbsUpIcon className="size-3.5 text-green-400" />
+                                            <span className="text-xs font-medium">
+                                                {video.metrics.likes.toLocaleString()}
+                                            </span>
+                                        </div>
+
+                                        <div className="h-4 w-px bg-white/10" />
+
+                                        <div className="flex items-center gap-1.5">
+                                            <ThumbsDownIcon className="size-3.5 text-red-400" />
+                                            <span className="text-xs font-medium">
+                                                {video.metrics.dislikes.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Additional Info */}
+                                    <div className="flex flex-col justify-center gap-2.5 text-xs text-muted-foreground">
                                         <span className="flex items-center gap-1.5">
                                             {/* Award star icon */}
                                             <svg
@@ -282,6 +377,25 @@ const AllVideoDetails: React.FC = function () {
                             </Card>
                         </Link>
                     ))}
+                </div>
+            )}
+
+            {/* Infinite scroll trigger element */}
+            {hasVideos && (
+                <div ref={loadMoreRef} className="flex justify-center py-6">
+                    {isFetchingNextPage && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <Loader2Icon className="size-5 animate-spin" />
+                            <span className="text-sm">
+                                Loading more videos...
+                            </span>
+                        </div>
+                    )}
+                    {!hasNextPage && videos.length > VIDEOS_PER_PAGE && (
+                        <p className="text-sm text-muted-foreground">
+                            You've reached the end
+                        </p>
+                    )}
                 </div>
             )}
         </section>

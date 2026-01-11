@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/app/api";
 import VideoPlayer from "@/components/video-player";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,16 @@ import {
     CalendarIcon,
     FilmIcon,
     Loader2Icon,
+    ThumbsDownIcon,
+    ThumbsUpIcon,
     UserIcon,
 } from "lucide-react";
 import { AxiosError } from "axios";
+import { formatRelativeTime } from "@/app/utils";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+type Reaction = "like" | "dislike" | null;
 
 type VideoData = {
     _id: string;
@@ -27,15 +34,53 @@ type VideoData = {
     previewImage: string;
     availableResolutions: string[];
     createdAt: string;
+    reaction: Reaction;
     uploader: {
         avatar: string;
         name: string;
     };
 };
 
-const fetchWatchVideo = async (videoId: string): Promise<VideoData[]> => {
-    const response = await api.get<VideoData[]>(`/api/videos/watch/${videoId}`);
+type ReactionResponse = {
+    message: string;
+    updatedReaction: Reaction;
+};
+
+const fetchWatchVideo = async (videoId: string): Promise<VideoData> => {
+    const response = await api.get<VideoData>(`/api/videos/${videoId}/watch`);
     return response.data;
+};
+
+const likeVideo = async (videoId: string): Promise<ReactionResponse> => {
+    const response = await api.post<ReactionResponse>(
+        `/api/videos/${videoId}/like`
+    );
+    return response.data;
+};
+
+const dislikeVideo = async (videoId: string): Promise<ReactionResponse> => {
+    const response = await api.post<ReactionResponse>(
+        `/api/videos/${videoId}/dislike`
+    );
+    return response.data;
+};
+
+const getReactionErrorMessage = (
+    errorCode: string,
+    action: "like" | "dislike"
+): string => {
+    switch (errorCode) {
+        case "INVALID_VIDEO_ID":
+            return "Invalid video ID";
+        case "NOT_FOUND":
+            return "Video not found";
+        case "CANNOT_LIKE_OWN_VIDEO":
+            return "You cannot like your own video";
+        case "CANNOT_DISLIKE_OWN_VIDEO":
+            return "You cannot dislike your own video";
+        default:
+            return `Failed to ${action} video`;
+    }
 };
 
 const formatDate = (value: string) => {
@@ -44,25 +89,6 @@ const formatDate = (value: string) => {
         day: "numeric",
         year: "numeric",
     }).format(new Date(value));
-};
-
-const formatRelativeTime = (value: string) => {
-    const now = new Date();
-    const date = new Date(value);
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return "Just now";
-    if (diffInSeconds < 3600)
-        return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400)
-        return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800)
-        return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    if (diffInSeconds < 2592000)
-        return `${Math.floor(diffInSeconds / 604800)} weeks ago`;
-    if (diffInSeconds < 31536000)
-        return `${Math.floor(diffInSeconds / 2592000)} months ago`;
-    return `${Math.floor(diffInSeconds / 31536000)} years ago`;
 };
 
 const LoadingSkeleton = () => (
@@ -137,9 +163,10 @@ const NotFoundState = () => (
 
 export default function WatchVideo() {
     const { videoId } = useParams<{ videoId: string }>();
+    const queryClient = useQueryClient();
 
     const {
-        data: videoData,
+        data: video,
         isLoading,
         isError,
         refetch,
@@ -151,11 +178,53 @@ export default function WatchVideo() {
         enabled: !!videoId,
     });
 
+    const likeMutation = useMutation({
+        mutationFn: () => likeVideo(videoId!),
+        onSuccess: (data) => {
+            queryClient.setQueryData<VideoData>(
+                ["watch-video", videoId],
+                (old) =>
+                    old ? { ...old, reaction: data.updatedReaction } : old
+            );
+        },
+        onError: (error: AxiosError<{ errorCode: string }>) => {
+            const errorCode = error.response?.data?.errorCode || "";
+            toast.error(getReactionErrorMessage(errorCode, "like"));
+        },
+    });
+
+    const dislikeMutation = useMutation({
+        mutationFn: () => dislikeVideo(videoId!),
+        onSuccess: (data) => {
+            queryClient.setQueryData<VideoData>(
+                ["watch-video", videoId],
+                (old) =>
+                    old ? { ...old, reaction: data.updatedReaction } : old
+            );
+        },
+        onError: (error: AxiosError<{ errorCode: string }>) => {
+            const errorCode = error.response?.data?.errorCode || "";
+            toast.error(getReactionErrorMessage(errorCode, "dislike"));
+        },
+    });
+
+    const handleLike = () => {
+        if (!likeMutation.isPending && !dislikeMutation.isPending) {
+            likeMutation.mutate();
+        }
+    };
+
+    const handleDislike = () => {
+        if (!likeMutation.isPending && !dislikeMutation.isPending) {
+            dislikeMutation.mutate();
+        }
+    };
+
     // Check for not found error
     if (
         isError &&
         error instanceof AxiosError &&
-        error.response?.data?.errorCode === "VIDEO_NOT_FOUND"
+        error.response?.data?.errorCode === "NOT_FOUND"
     ) {
         return (
             <section className="py-8">
@@ -172,7 +241,7 @@ export default function WatchVideo() {
         );
     }
 
-    if (isError || !videoData || videoData.length === 0) {
+    if (isError || !video) {
         return (
             <section className="py-8">
                 <ErrorState
@@ -182,8 +251,6 @@ export default function WatchVideo() {
             </section>
         );
     }
-
-    const video = videoData[0];
 
     return (
         <section className="max-w-6xl mx-auto px-4 py-6 space-y-6">
@@ -268,12 +335,82 @@ export default function WatchVideo() {
                         </div>
                     </div>
 
-                    {/* Upload Date */}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CalendarIcon className="size-4" />
-                        <span title={formatDate(video.createdAt)}>
-                            {formatRelativeTime(video.createdAt)}
-                        </span>
+                    {/* Like/Dislike & Date */}
+                    <div className="flex items-center gap-4">
+                        {/* Like/Dislike Buttons */}
+                        <div className="flex items-center rounded-full bg-white/5 border border-white/10 overflow-hidden">
+                            <button
+                                onClick={handleLike}
+                                disabled={
+                                    likeMutation.isPending ||
+                                    dislikeMutation.isPending
+                                }
+                                className={cn(
+                                    "flex items-center gap-2 px-4 py-2 transition-all duration-200",
+                                    "hover:bg-white/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
+                                    video.reaction === "like"
+                                        ? "text-primary bg-primary/10"
+                                        : "text-muted-foreground hover:text-white"
+                                )}
+                                aria-label="Like video"
+                            >
+                                {likeMutation.isPending ? (
+                                    <Loader2Icon className="size-5 animate-spin" />
+                                ) : (
+                                    <ThumbsUpIcon
+                                        className={cn(
+                                            "size-5 transition-transform",
+                                            video.reaction === "like" &&
+                                                "fill-primary"
+                                        )}
+                                    />
+                                )}
+                                <span className="text-sm font-medium">
+                                    Like
+                                </span>
+                            </button>
+
+                            <div className="w-px h-6 bg-white/10" />
+
+                            <button
+                                onClick={handleDislike}
+                                disabled={
+                                    likeMutation.isPending ||
+                                    dislikeMutation.isPending
+                                }
+                                className={cn(
+                                    "flex items-center gap-2 px-4 py-2 transition-all duration-200",
+                                    "hover:bg-white/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
+                                    video.reaction === "dislike"
+                                        ? "text-red-400 bg-red-500/10"
+                                        : "text-muted-foreground hover:text-white"
+                                )}
+                                aria-label="Dislike video"
+                            >
+                                {dislikeMutation.isPending ? (
+                                    <Loader2Icon className="size-5 animate-spin" />
+                                ) : (
+                                    <ThumbsDownIcon
+                                        className={cn(
+                                            "size-5 transition-transform",
+                                            video.reaction === "dislike" &&
+                                                "fill-red-400"
+                                        )}
+                                    />
+                                )}
+                                <span className="text-sm font-medium">
+                                    Dislike
+                                </span>
+                            </button>
+                        </div>
+
+                        {/* Upload Date */}
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <CalendarIcon className="size-4" />
+                            <span title={formatDate(video.createdAt)}>
+                                {formatRelativeTime(video.createdAt)}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
