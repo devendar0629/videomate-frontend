@@ -13,6 +13,7 @@ import {
 import {
     ArrowLeftIcon,
     CalendarIcon,
+    ClockIcon,
     EyeIcon,
     FilmIcon,
     GlobeIcon,
@@ -24,6 +25,7 @@ import {
     ThumbsUpIcon,
     Trash2Icon,
 } from "lucide-react";
+import { formatDuration } from "@/app/utils";
 import VideoPlayer from "@/components/video-player";
 import {
     Dialog,
@@ -45,6 +47,7 @@ type VideoItem = {
     originalFileName: string;
     previewImage: string | null;
     availableResolutions: string[];
+    duration: number;
     status: "finished" | "processing" | "failed" | string;
     visibility: "private" | "public" | string;
     createdAt: string;
@@ -468,6 +471,25 @@ export default function VideoDetails() {
 
                     {/* Metrics */}
                     <div className="flex items-center gap-6 p-4 w-fit rounded-lg bg-white/5 border border-white/10">
+                        {video.duration > 0 && (
+                            <>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center justify-center size-9 rounded-full bg-purple-500/10">
+                                        <ClockIcon className="size-4 text-purple-400" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-muted-foreground">
+                                            Duration
+                                        </span>
+                                        <span className="text-lg font-semibold">
+                                            {formatDuration(video.duration)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="h-10 w-px bg-white/10" />
+                            </>
+                        )}
+
                         <div className="flex items-center gap-2">
                             <div className="flex items-center justify-center size-9 rounded-full bg-blue-500/10">
                                 <EyeIcon className="size-4 text-blue-400" />

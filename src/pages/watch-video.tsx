@@ -13,6 +13,7 @@ import {
 import {
     ArrowLeftIcon,
     CalendarIcon,
+    ClockIcon,
     FilmIcon,
     Loader2Icon,
     ThumbsDownIcon,
@@ -20,7 +21,7 @@ import {
     UserIcon,
 } from "lucide-react";
 import { AxiosError } from "axios";
-import { formatRelativeTime } from "@/app/utils";
+import { formatRelativeTime, formatDuration } from "@/app/utils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,7 @@ type VideoData = {
     uniqueFileName: string;
     previewImage: string;
     availableResolutions: string[];
+    duration: number;
     createdAt: string;
     reaction: Reaction;
     isUploader: boolean;
@@ -404,6 +406,14 @@ export default function WatchVideo() {
                                         Dislike
                                     </span>
                                 </button>
+                            </div>
+                        )}
+
+                        {/* Duration */}
+                        {video.duration > 0 && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-muted-foreground">
+                                <ClockIcon className="size-4" />
+                                <span>{formatDuration(video.duration)}</span>
                             </div>
                         )}
 

@@ -1,6 +1,7 @@
 import type React from "react";
 import { useCallback, useEffect, useRef } from "react";
 import api from "@/app/api";
+import { formatDuration } from "@/app/utils";
 import {
     Card,
     CardContent,
@@ -30,6 +31,7 @@ type VideoItem = {
     uniqueFileName: string;
     previewImage: string | null;
     availableResolutions: string[];
+    duration: number;
     status: "finished" | "processing" | "failed" | string;
     visibility: "private" | "public" | string;
     createdAt: string;
@@ -106,23 +108,33 @@ const VisibilityPill: React.FC<{ visibility: VideoItem["visibility"] }> = ({
 const PreviewFrame: React.FC<{ video: VideoItem }> = ({ video }) => {
     const resolvedPreview = `http://localhost:3000/videos/${video.uniqueFileName}/thumbnail.jpg`;
 
+    const durationBadge = video.duration > 0 && (
+        <span className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/80 text-white text-xs font-medium rounded">
+            {formatDuration(video.duration)}
+        </span>
+    );
+
     if (resolvedPreview) {
         return (
-            <img
-                src={resolvedPreview}
-                alt={video.title}
-                className="w-full h-40 rounded-lg object-cover border border-white/10"
-                loading="lazy"
-            />
+            <div className="relative">
+                <img
+                    src={resolvedPreview}
+                    alt={video.title}
+                    className="w-full h-40 rounded-lg object-cover border border-white/10"
+                    loading="lazy"
+                />
+                {durationBadge}
+            </div>
         );
     }
 
     return (
-        <div className="w-full h-40 rounded-lg border border-white/10 bg-linear-to-br from-primary/20 via-slate-900 to-secondary/30 flex items-center justify-center">
+        <div className="relative w-full h-40 rounded-lg border border-white/10 bg-linear-to-br from-primary/20 via-slate-900 to-secondary/30 flex items-center justify-center">
             <div className="flex items-center gap-2 text-sm text-white/70">
                 <FilmIcon className="size-4" />
                 <span className="font-semibold">{video.title}</span>
             </div>
+            {durationBadge}
         </div>
     );
 };

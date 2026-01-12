@@ -33,7 +33,7 @@ const UploadDialog: React.FC<UploadVideoDialogProps> = ({
     );
 
     return (
-        <div className="w-full gap-6">
+        <div className="max-w-3xl gap-6">
             <input
                 ref={inputRef}
                 className="hidden"

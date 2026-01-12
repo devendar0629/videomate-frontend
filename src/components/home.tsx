@@ -5,7 +5,7 @@ import { Link } from "react-router";
 import { useRef, useState, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import api from "@/app/api";
-import { formatRelativeTime } from "@/app/utils";
+import { formatRelativeTime, formatDuration } from "@/app/utils";
 
 interface VideoResult {
     _id: string;
@@ -13,6 +13,7 @@ interface VideoResult {
     description: string;
     uniqueFileName: string;
     availableResolutions: string[];
+    duration: number;
     createdAt: string;
     uploader: {
         avatar: string;
@@ -37,13 +38,18 @@ const VideoCard: React.FC<{ video: VideoResult }> = ({ video }) => {
         <div className="w-full h-56 flex flex-row gap-5 hover:bg-primary/10 p-2 rounded-md transition-colors items-start">
             <Link
                 to={`/videos/watch/${video._id}`}
-                className="h-full max-w-[40%]"
+                className="h-full max-w-[40%] relative"
             >
                 <img
                     src={thumbnailUrl}
                     alt={video.title}
                     className="w-full h-full object-cover rounded-md"
                 />
+                {video.duration > 0 && (
+                    <span className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/80 text-white text-xs font-medium rounded">
+                        {formatDuration(video.duration)}
+                    </span>
+                )}
             </Link>
 
             <Link
