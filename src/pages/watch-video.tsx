@@ -35,6 +35,7 @@ type VideoData = {
     availableResolutions: string[];
     createdAt: string;
     reaction: Reaction;
+    isUploader: boolean;
     uploader: {
         avatar: string;
         name: string;
@@ -338,71 +339,73 @@ export default function WatchVideo() {
                     {/* Like/Dislike & Date */}
                     <div className="flex items-center gap-4">
                         {/* Like/Dislike Buttons */}
-                        <div className="flex items-center rounded-full bg-white/5 border border-white/10 overflow-hidden">
-                            <button
-                                onClick={handleLike}
-                                disabled={
-                                    likeMutation.isPending ||
-                                    dislikeMutation.isPending
-                                }
-                                className={cn(
-                                    "flex items-center gap-2 px-4 py-2 transition-all duration-200",
-                                    "hover:bg-white/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
-                                    video.reaction === "like"
-                                        ? "text-primary bg-primary/10"
-                                        : "text-muted-foreground hover:text-white"
-                                )}
-                                aria-label="Like video"
-                            >
-                                {likeMutation.isPending ? (
-                                    <Loader2Icon className="size-5 animate-spin" />
-                                ) : (
-                                    <ThumbsUpIcon
-                                        className={cn(
-                                            "size-5 transition-transform",
-                                            video.reaction === "like" &&
-                                                "fill-primary"
-                                        )}
-                                    />
-                                )}
-                                <span className="text-sm font-medium">
-                                    Like
-                                </span>
-                            </button>
+                        {video.isUploader ? null : (
+                            <div className="flex items-center rounded-full bg-white/5 border border-white/10 overflow-hidden">
+                                <button
+                                    onClick={handleLike}
+                                    disabled={
+                                        likeMutation.isPending ||
+                                        dislikeMutation.isPending
+                                    }
+                                    className={cn(
+                                        "flex items-center gap-2 px-4 py-2 transition-all duration-200",
+                                        "hover:bg-white/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
+                                        video.reaction === "like"
+                                            ? "text-primary bg-primary/10"
+                                            : "text-muted-foreground hover:text-white"
+                                    )}
+                                    aria-label="Like video"
+                                >
+                                    {likeMutation.isPending ? (
+                                        <Loader2Icon className="size-5 animate-spin" />
+                                    ) : (
+                                        <ThumbsUpIcon
+                                            className={cn(
+                                                "size-5 transition-transform",
+                                                video.reaction === "like" &&
+                                                    "fill-primary"
+                                            )}
+                                        />
+                                    )}
+                                    <span className="text-sm font-medium">
+                                        Like
+                                    </span>
+                                </button>
 
-                            <div className="w-px h-6 bg-white/10" />
+                                <div className="w-px h-6 bg-white/10" />
 
-                            <button
-                                onClick={handleDislike}
-                                disabled={
-                                    likeMutation.isPending ||
-                                    dislikeMutation.isPending
-                                }
-                                className={cn(
-                                    "flex items-center gap-2 px-4 py-2 transition-all duration-200",
-                                    "hover:bg-white/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
-                                    video.reaction === "dislike"
-                                        ? "text-red-400 bg-red-500/10"
-                                        : "text-muted-foreground hover:text-white"
-                                )}
-                                aria-label="Dislike video"
-                            >
-                                {dislikeMutation.isPending ? (
-                                    <Loader2Icon className="size-5 animate-spin" />
-                                ) : (
-                                    <ThumbsDownIcon
-                                        className={cn(
-                                            "size-5 transition-transform",
-                                            video.reaction === "dislike" &&
-                                                "fill-red-400"
-                                        )}
-                                    />
-                                )}
-                                <span className="text-sm font-medium">
-                                    Dislike
-                                </span>
-                            </button>
-                        </div>
+                                <button
+                                    onClick={handleDislike}
+                                    disabled={
+                                        likeMutation.isPending ||
+                                        dislikeMutation.isPending
+                                    }
+                                    className={cn(
+                                        "flex items-center gap-2 px-4 py-2 transition-all duration-200",
+                                        "hover:bg-white/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
+                                        video.reaction === "dislike"
+                                            ? "text-red-400 bg-red-500/10"
+                                            : "text-muted-foreground hover:text-white"
+                                    )}
+                                    aria-label="Dislike video"
+                                >
+                                    {dislikeMutation.isPending ? (
+                                        <Loader2Icon className="size-5 animate-spin" />
+                                    ) : (
+                                        <ThumbsDownIcon
+                                            className={cn(
+                                                "size-5 transition-transform",
+                                                video.reaction === "dislike" &&
+                                                    "fill-red-400"
+                                            )}
+                                        />
+                                    )}
+                                    <span className="text-sm font-medium">
+                                        Dislike
+                                    </span>
+                                </button>
+                            </div>
+                        )}
 
                         {/* Upload Date */}
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
