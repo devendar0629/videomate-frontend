@@ -1,7 +1,8 @@
 import {
     HomeIcon,
     LogOutIcon,
-    SettingsIcon,
+    ThumbsDownIcon,
+    ThumbsUpIcon,
     UserIcon,
     VideoIcon,
 } from "lucide-react";
@@ -80,16 +81,30 @@ const Sidebar = function () {
                 }}
                 className="flex px-4.5 flex-col gap-2.5 overflow-auto"
             >
-                <SidebarLink icon={<HomeIcon />} to="/" label="Home" />
                 <SidebarLink
-                    icon={<VideoIcon />}
+                    icon={<HomeIcon className="size-5.5" />}
+                    to="/"
+                    label="Home"
+                />
+                <SidebarLink
+                    icon={<VideoIcon className="size-5.5" />}
                     to="/my-videos"
                     label="My Videos"
                 />
                 <SidebarLink
-                    icon={<UserIcon />}
+                    icon={<UserIcon className="size-5" />}
                     to="/profile"
                     label="Profile"
+                />
+                <SidebarLink
+                    icon={<ThumbsUpIcon className="size-5" />}
+                    to="/my-videos/liked"
+                    label="Liked Videos"
+                />
+                <SidebarLink
+                    icon={<ThumbsDownIcon className="size-5" />}
+                    to="/my-videos/disliked"
+                    label="Disliked Videos"
                 />
             </div>
 

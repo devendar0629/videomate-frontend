@@ -13,6 +13,8 @@ import AllVideoDetails from "@/pages/all-video-details";
 import VideoDetails from "@/pages/video-detail";
 import WatchVideo from "@/pages/watch-video";
 import EditVideo from "@/pages/edit-video";
+import LikedVideos from "@/pages/liked-videos";
+import DislikedVideos from "@/pages/disliked-videos";
 
 export default function Router() {
     return (
@@ -47,10 +49,19 @@ export default function Router() {
                             />
                             <Route path="/my-videos">
                                 <Route index element={<AllVideoDetails />} />
+
+                                <Route path="liked" element={<LikedVideos />} />
+
+                                <Route
+                                    path="disliked"
+                                    element={<DislikedVideos />}
+                                />
+
                                 <Route
                                     path=":videoId"
                                     element={<VideoDetails />}
                                 />
+
                                 <Route
                                     path=":videoId/edit"
                                     element={<EditVideo />}

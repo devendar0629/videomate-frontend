@@ -29,10 +29,10 @@ import { useAppDispatch } from "@/app/hooks";
 
 const loginFormSchema = z.object({
     email: z.email("Invalid email address"),
-    password: z.any(),
-    // .string()
-    // .min(8, "Password must be at least 8 characters long")
-    // .max(64, "Password must be at most 64 characters long"),
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(64, "Password must be at most 64 characters long"),
 });
 type LoginFormData = z.infer<typeof loginFormSchema>;
 
